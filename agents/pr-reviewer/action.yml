@@ -1,0 +1,30 @@
+name: 'Claude Code PR Reviewer'
+description: 'Automated PR review agent analyzing diffs and posting structured feedback'
+inputs:
+  pr-url:
+    description: 'Pull Request URL'
+    required: true
+  github-token:
+    description: 'GitHub Token for authentication'
+    required: true
+outputs:
+  review-markdown:
+    description: 'Generated markdown review'
+    value: ${{ steps.review.outputs.review }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Run Review Agent
+      id: review
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        python3 agents/pr-reviewer/claude_review.py --pr "${{ inputs.pr-url }}" --output review.md
+        echo "review<<EOF" >> $GITHUB_OUTPUT
+        cat review.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
